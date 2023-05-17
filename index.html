@@ -8,16 +8,90 @@
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+		<link rel="stylesheet" href="dist/theme/night.css">
 
 		<!-- Theme used for syntax highlighted code -->
 		<link rel="stylesheet" href="plugin/highlight/monokai.css">
+		<link rel="stylesheet" href="css/custom.css">
 	</head>
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section data-markdown data-separator-vertical="^--$">
+					<script type="text/template">
+						<!-- .slide: data-background-image="img/intro.jpg" data-background-opacity="0.3"-->
+
+						GPT-4<!-- .element: class="r-fit-text" -->
+
+						### How do I stop coding?
+
+						Maciej Małecki; Capgemini, Craftsmanship, 2023<!-- .element: class="cyan"-->
+
+						---
+
+						> Artificial intelligence (AI) is intelligence—perceiving, synthesizing, and inferring information—demonstrated by machines, as opposed to intelligence displayed by humans or by other animals. (Wikipedia)
+
+						Born as science discipline in 1956 (John McCarthy).
+
+						--
+
+						![ANN](img/ann.excalidraw.png)
+
+						Artificial neural networks (ANNs) are computing systems inspired by the biological neural networks that constitute animal brains. (Wikipedia)
+
+						--
+
+						![neuron](img/640px-Blausen_0657_MultipolarNeuron.png)
+
+						By BruceBlaus - Own work, CC BY 3.0, [here](https://commons.wikimedia.org/w/index.php?curid=28761830).
+						--
+
+						![AN](img/an.excalidraw.png)
+
+						<div>
+							\[y_k = \varphi(\sum_{j=0}^mw_{kj}x_j)\]
+						</div>
+
+						---
+
+						## Example problem to be solved
+
+						A simple image processing<!-- .element: class="cyan"-->
+
+						--
+
+						![Domain](img/domain.excalidraw.png)
+
+						--
+
+						![Output](img/domain-output.excalidraw.png)
+
+						--
+
+						````kotlin[|4-6|7-10|11-13|14-16]
+						image {
+							getInput().set(file("src/spritepad/tony kucanie 4 klatki.png"))
+							getUseBuildDir().set(true)
+							split {
+								width = 32
+								height = 32
+								extend {
+									newWidth = 48
+									newHeight = 42
+									fillColor = Color(0, 0, 0, 255)
+									split {
+										width = 24
+										height = 21
+										sprite {
+											getOutput().set(file("sprites/tony-duck-left.bin"))
+										}
+									}
+								}
+							}
+						}
+						````
+					</script>
+				</section>
 			</div>
 		</div>
 
@@ -25,15 +99,26 @@
 		<script src="plugin/notes/notes.js"></script>
 		<script src="plugin/markdown/markdown.js"></script>
 		<script src="plugin/highlight/highlight.js"></script>
+		<script src="plugin/math/math.js"></script>
 		<script>
 			// More info about initialization & config:
 			// - https://revealjs.com/initialization/
 			// - https://revealjs.com/config/
 			Reveal.initialize({
 				hash: true,
+				slideNumber: 'c/t',
+				mathjax2: {
+					config: 'TeX-AMS_HTML-full',
+					TeX: {
+						Macros: {
+							R: '\\mathbb{R}',
+							set: [ '\\left\\{#1 \\; ; \\; #2\\right\\}', 2 ]
+						}
+					}
+				},
 
 				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
+				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes, RevealMath.MathJax2 ]
 			});
 		</script>
 	</body>

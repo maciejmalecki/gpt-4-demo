@@ -1,0 +1,18 @@
+.reveal section .pink {
+    color: #ff00ff;
+}
+.reveal section .cyan {
+    color: #00ffff;
+}
+.reveal section .left-align {
+    text-align: left;
+}
+.reveal section .no-ticks li {
+    list-style-type: none;
+}
+.reveal section .gap1 {
+    gap: 1em;
+}
+.reveal section .subtitle {
+    font-size: 2rem;
+}
