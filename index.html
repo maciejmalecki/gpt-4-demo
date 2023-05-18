@@ -127,13 +127,21 @@
 
 						--
 
-						> Implement generic image class in Kotlin. It should internally store rectangular matrix of pixels consisting of red, green, blue and alpha compounds.
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						## (human input)
+
+						![Hum](img/hum-ava.png)	 Implement generic image class in Kotlin. It should internally store rectangular matrix of pixels consisting of red, green, blue and alpha compounds.
 
 						--
+
+						## (AI answer)
 
 						![GPT](img/gpt-ava.svg) In this Kotlin implementation, we'll create a generic Image class that stores a rectangular matrix of pixels. Each pixel will be represented by a Color class, which contains the red, green, blue, and alpha components.
 
 						--
+
+						![GPT](img/gpt-ava.svg) 
 
 						```kotlin[]
 						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
@@ -167,7 +175,9 @@
 
 						--
 
-						> expose width and height as properties
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 expose width and height as properties
 
 						--
 
@@ -199,7 +209,9 @@
 
 						--
 
-						> add a method that will create new image out of the given image that will be a subset of that image specified by top, left, width and height parameters
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 add a method that will create new image out of the given image that will be a subset of that image specified by top, left, width and height parameters
 
 						--
 
@@ -248,7 +260,9 @@
 
 						--
 
-						> add a method that will create a new image that will be a copy of the image extended to the new width and height where new are is filled with given color
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 add a method that will create a new image that will be a copy of the image extended to the new width and height where new are is filled with given color
 
 						--
 
@@ -306,8 +320,9 @@
 						```
 
 						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						> include subImage into the class as well
+						![Hum](img/hum-ava.png)	include subImage into the class as well
 
 						--
 
@@ -377,7 +392,9 @@
 
 						--
 
-						> Implement unit tests for class Image using Kotest
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 Implement unit tests for class Image using Kotest
 
 						--
 
@@ -471,7 +488,9 @@
 
 						--
 
-						> use behavior spec
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 use behavior spec
 
 						--
 
@@ -566,7 +585,9 @@
 
 						--
 
-						> implement a function, that will produce a series of images of given width and height being a consensutive horizontal subimages of given image
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 implement a function, that will produce a series of images of given width and height being a consensutive horizontal subimages of given image
 
 						--
 
@@ -592,7 +613,9 @@
 						```
 
 						--
-						> Write unit tests for this class using kotest and behavior spec
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png)	 Write unit tests for this class using kotest and behavior spec
 
 						```kotlin[]
 						data class CutImageCommand(val file: File, val width: Int, val height: Int, val left: Int = 0, val top: Int = 0)
