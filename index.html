@@ -4,7 +4,7 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+		<title>GPT-4: How do I stop coding?</title>
 
 		<link rel="stylesheet" href="dist/reset.css">
 		<link rel="stylesheet" href="dist/reveal.css">
@@ -29,6 +29,16 @@
 
 						---
 
+						(Expectation management)<!-- .element: class="cyan"-->
+
+						## Artifical intelligence:
+
+						* How would AI change my work (live)?
+						* When would that happen?
+						* Is my workplace save?
+
+						---
+
 						> Artificial intelligence (AI) is intelligence—perceiving, synthesizing, and inferring information—demonstrated by machines, as opposed to intelligence displayed by humans or by other animals. (Wikipedia)
 
 						Born as science discipline in 1956 (John McCarthy).
@@ -38,6 +48,21 @@
 						![ANN](img/ann.excalidraw.png)
 
 						Artificial neural networks (ANNs) are computing systems inspired by the biological neural networks that constitute animal brains. (Wikipedia)
+
+						--
+
+						<div class="r-hstack gap1">
+							<img src="img/neocortex.png" alt="neocortex">
+							<div>
+								<h3>neocortex</h3>
+								<ul>
+									<li>6 layers</li>
+									<li>4-5mm thick</li>
+									<li>~16 billions neurons</li>
+									<li>~100 trillion ($10^{14}$) synapses</li>
+								</ul>
+							</div>
+						</div>
 
 						--
 
@@ -90,6 +115,599 @@
 							}
 						}
 						````
+
+						---
+
+						![GPT-4](img/gpt.png)
+
+						---
+
+						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
+						# Domain
+
+						--
+
+						> Implement generic image class in Kotlin. It should internally store rectangular matrix of pixels consisting of red, green, blue and alpha compounds.
+
+						--
+
+						![GPT](img/gpt-ava.svg) In this Kotlin implementation, we'll create a generic Image class that stores a rectangular matrix of pixels. Each pixel will be represented by a Color class, which contains the red, green, blue, and alpha components.
+
+						--
+
+						```kotlin[]
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+
+						class Image(private val width: Int, private val height: Int) {
+
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+
+							operator fun get(x: Int, y: Int): Color {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								return pixels[y][x]
+							}
+
+							operator fun set(x: Int, y: Int, color: Color) {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								pixels[y][x] = color
+							}
+
+							fun getWidth(): Int = width
+
+							fun getHeight(): Int = height
+						}
+
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here, we create a Color data class to store the RGBA components of a pixel. The Image class constructor takes the width and height as parameters and creates an array of Color objects. The get and set operator functions provide access to the individual pixels, and the getWidth and getHeight functions return the dimensions of the image.
+
+						--
+
+						> expose width and height as properties
+
+						--
+
+						![GPT](img/gpt-ava.svg) To expose width and height as properties in the Image class, you can use Kotlin's property syntax. Here's the modified version of the Image class with the width and height properties exposed:
+
+						--
+
+						```kotlin[3]
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+
+						class Image(val width: Int, val height: Int) {
+
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+
+							operator fun get(x: Int, y: Int): Color {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								return pixels[y][x]
+							}
+
+							operator fun set(x: Int, y: Int, color: Color) {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								pixels[y][x] = color
+							}
+						}
+
+						```
+
+						--
+
+						> add a method that will create new image out of the given image that will be a subset of that image specified by top, left, width and height parameters
+
+						--
+
+						![GPT](img/gpt-ava.svg) You can add a subImage method to the Image class to create a new image that is a subset of the given image. The method takes top, left, width, and height parameters to specify the rectangular region that should be extracted from the original image.
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here's the updated Image class with the subImage method:
+
+						```kotlin[19-31]
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+
+						class Image(val width: Int, val height: Int) {
+
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+
+							operator fun get(x: Int, y: Int): Color {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								return pixels[y][x]
+							}
+
+							operator fun set(x: Int, y: Int, color: Color) {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								pixels[y][x] = color
+							}
+
+							fun subImage(top: Int, left: Int, width: Int, height: Int): Image {
+								require(top in 0 until this.height) { "Top coordinate out of bounds" }
+								require(left in 0 until this.width) { "Left coordinate out of bounds" }
+								require(top + height <= this.height) { "Height out of bounds" }
+								require(left + width <= this.width) { "Width out of bounds" }
+
+								val newImage = Image(width, height)
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										newImage[x, y] = this[left + x, top + y]
+									}
+								}
+								return newImage
+							}
+						}
+
+						```
+
+						--
+
+						> add a method that will create a new image that will be a copy of the image extended to the new width and height where new are is filled with given color
+
+						--
+
+						![GPT](img/gpt-ava.svg) You can add an extend method to the Image class to create a new image that is an extended copy of the original image. The method takes newWidth, newHeight, and a fillColor parameter to specify the dimensions of the new image and the color to fill the extended area.
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here's the updated Image class with the extend method:
+
+						```kotlin[]
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+
+						class Image(val width: Int, val height: Int) {
+
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+
+							operator fun get(x: Int, y: Int): Color {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								return pixels[y][x]
+							}
+
+							operator fun set(x: Int, y: Int, color: Color) {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								pixels[y][x] = color
+							}
+
+							fun extend(newWidth: Int, newHeight: Int, fillColor: Color = Color(0, 0, 0, 255)): Image {
+								require(newWidth >= width) { "New width must be greater or equal to the current width" }
+								require(newHeight >= height) { "New height must be greater or equal to the current height" }
+
+								val newImage = Image(newWidth, newHeight)
+
+								// Copy original image pixels
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										newImage[x, y] = this[x, y]
+									}
+								}
+
+								// Fill the extended area with the specified color
+								for (y in 0 until newHeight) {
+									for (x in 0 until newWidth) {
+										if (x >= width || y >= height) {
+											newImage[x, y] = fillColor
+										}
+									}
+								}
+
+								return newImage
+							}
+						}
+
+						```
+
+						--
+
+						> include subImage into the class as well
+
+						--
+
+						![GPT](img/gpt-ava.svg) I apologize for the confusion. To include the subImage method in the Image class, simply add it to the class definition as follows:
+
+						```kotlin[]
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+
+						class Image(val width: Int, val height: Int) {
+
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+
+							operator fun get(x: Int, y: Int): Color {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								return pixels[y][x]
+							}
+
+							operator fun set(x: Int, y: Int, color: Color) {
+								require(x in 0 until width) { "x coordinate out of bounds" }
+								require(y in 0 until height) { "y coordinate out of bounds" }
+								pixels[y][x] = color
+							}
+
+							fun subImage(top: Int, left: Int, width: Int, height: Int): Image {
+								require(top in 0 until this.height) { "Top coordinate out of bounds" }
+								require(left in 0 until this.width) { "Left coordinate out of bounds" }
+								require(top + height <= this.height) { "Height out of bounds" }
+								require(left + width <= this.width) { "Width out of bounds" }
+
+								val newImage = Image(width, height)
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										newImage[x, y] = this[left + x, top + y]
+									}
+								}
+								return newImage
+							}
+
+							fun extend(newWidth: Int, newHeight: Int, fillColor: Color = Color(0, 0, 0, 255)): Image {
+								require(newWidth >= width) { "New width must be greater or equal to the current width" }
+								require(newHeight >= height) { "New height must be greater or equal to the current height" }
+
+								val newImage = Image(newWidth, newHeight)
+
+								// Copy original image pixels
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										newImage[x, y] = this[x, y]
+									}
+								}
+
+								// Fill the extended area with the specified color
+								for (y in 0 until newHeight) {
+									for (x in 0 until newWidth) {
+										if (x >= width || y >= height) {
+											newImage[x, y] = fillColor
+										}
+									}
+								}
+
+								return newImage
+							}
+						}
+
+						```
+
+						--
+
+						> Implement unit tests for class Image using Kotest
+
+						--
+
+						![GPT](img/gpt-ava.svg) To create unit tests for the Image class using the Kotest framework, you'll first need to add the Kotest dependencies to your project. If you're using Gradle, add the following dependencies to your build.gradle.kts file:
+
+						```kotlin[]
+						dependencies {
+							testImplementation("io.kotest:kotest-framework-engine:4.6.3")
+							testImplementation("io.kotest:kotest-assertions-core:4.6.3")
+							testImplementation("io.kotest:kotest-runner-junit5:4.6.3")
+						}
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg) Now, create a test class for the Image class. In this example, we'll create a file named ImageTest.kt with the following content:
+
+						```kotlin[]
+						import io.kotest.core.spec.style.StringSpec
+						import io.kotest.matchers.ints.shouldBeExactly
+						import io.kotest.matchers.shouldBe
+
+						class ImageTest : StringSpec({
+
+							"Image dimensions should be initialized correctly" {
+								val image = Image(100, 50)
+
+								image.width shouldBeExactly 100
+								image.height shouldBeExactly 50
+							}
+
+							"Setting and getting pixel colors should work correctly" {
+								val image = Image(100, 50)
+								val color = Color(100, 200, 150, 255)
+
+								image[10, 20] = color
+								image[10, 20] shouldBe color
+							}
+
+							"SubImage should return correct image region" {
+								val image = Image(100, 50)
+
+								// Fill the image with unique colors for demonstration purposes
+								for (y in 0 until image.height) {
+									for (x in 0 until image.width) {
+										image[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+									}
+								}
+
+								val subImage = image.subImage(10, 20, 30, 15)
+
+								subImage.width shouldBeExactly 30
+								subImage.height shouldBeExactly 15
+
+								for (y in 0 until subImage.height) {
+									for (x in 0 until subImage.width) {
+										subImage[x, y] shouldBe image[x + 20, y + 10]
+									}
+								}
+							}
+
+							"Extend should return correct extended image" {
+								val image = Image(100, 50)
+
+								// Fill the image with unique colors for demonstration purposes
+								for (y in 0 until image.height) {
+									for (x in 0 until image.width) {
+										image[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+									}
+								}
+
+								val fillColor = Color(0, 0, 0, 255)
+								val extendedImage = image.extend(150, 80, fillColor)
+
+								extendedImage.width shouldBeExactly 150
+								extendedImage.height shouldBeExactly 80
+
+								for (y in 0 until extendedImage.height) {
+									for (x in 0 until extendedImage.width) {
+										if (x < image.width && y < image.height) {
+											extendedImage[x, y] shouldBe image[x, y]
+										} else {
+											extendedImage[x, y] shouldBe fillColor
+										}
+									}
+								}
+							}
+						})
+
+						```
+
+						--
+
+						> use behavior spec
+
+						--
+
+						![GPT](img/gpt-ava.svg) To use the BehaviorSpec style from Kotest, you can update your test class like this:
+
+						```kotlin[]
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.ints.shouldBeExactly
+						import io.kotest.matchers.shouldBe
+
+						class ImageTest : BehaviorSpec({
+							Given("An Image instance with dimensions 100x50") {
+								val image = Image(100, 50)
+
+								When("checking dimensions") {
+									Then("the width should be 100 and the height should be 50") {
+										image.width shouldBeExactly 100
+										image.height shouldBeExactly 50
+									}
+								}
+
+								When("setting and getting pixel colors") {
+									val color = Color(100, 200, 150, 255)
+									image[10, 20] = color
+
+									Then("the color should be set and retrieved correctly") {
+										image[10, 20] shouldBe color
+									}
+								}
+
+								When("creating a subImage") {
+									// Fill the image with unique colors for demonstration purposes
+									for (y in 0 until image.height) {
+										for (x in 0 until image.width) {
+											image[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+										}
+									}
+
+									val subImage = image.subImage(10, 20, 30, 15)
+
+									Then("the subImage should have the correct dimensions") {
+										subImage.width shouldBeExactly 30
+										subImage.height shouldBeExactly 15
+									}
+
+									Then("the subImage should contain the correct region from the original image") {
+										for (y in 0 until subImage.height) {
+											for (x in 0 until subImage.width) {
+												subImage[x, y] shouldBe image[x + 20, y + 10]
+											}
+										}
+									}
+								}
+
+								When("extending the image") {
+									// Fill the image with unique colors for demonstration purposes
+									for (y in 0 until image.height) {
+										for (x in 0 until image.width) {
+											image[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+										}
+									}
+
+									val fillColor = Color(0, 0, 0, 255)
+									val extendedImage = image.extend(150, 80, fillColor)
+
+									Then("the extended image should have the correct dimensions") {
+										extendedImage.width shouldBeExactly 150
+										extendedImage.height shouldBeExactly 80
+									}
+
+									Then("the extended image should contain the original image and the fill color in the extended area") {
+										for (y in 0 until extendedImage.height) {
+											for (x in 0 until extendedImage.width) {
+												if (x < image.width && y < image.height) {
+													extendedImage[x, y] shouldBe image[x, y]
+												} else {
+													extendedImage[x, y] shouldBe fillColor
+												}
+											}
+										}
+									}
+								}
+							}
+						})
+
+						```
+
+						---
+
+						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
+						# Use cases
+
+						--
+
+						> implement a function, that will produce a series of images of given width and height being a consensutive horizontal subimages of given image
+
+						--
+
+						![GPT](img/gpt-ava.svg) You can create a function called splitImageIntoSubimages that takes an input Image and the dimensions of the desired subimages. The function will then generate a series of horizontal subimages of the specified size. Here's the implementation of the function:
+
+						```kotlin[]
+						fun splitImageIntoSubimages(image: Image, subImageWidth: Int, subImageHeight: Int): List<Image> {
+							require(subImageWidth > 0) { "Subimage width must be greater than 0" }
+							require(subImageHeight > 0) { "Subimage height must be greater than 0" }
+							require(subImageWidth <= image.width) { "Subimage width must be less than or equal to the image width" }
+							require(subImageHeight <= image.height) { "Subimage height must be less than or equal to the image height" }
+						
+							val subImages = mutableListOf<Image>()
+							var x = 0
+						
+							while (x + subImageWidth <= image.width) {
+								subImages.add(image.subImage(0, x, subImageWidth, subImageHeight))
+								x += subImageWidth
+							}
+						
+							return subImages
+						}
+						```
+
+						--
+						> Write unit tests for this class using kotest and behavior spec
+
+						```kotlin[]
+						data class CutImageCommand(val file: File, val width: Int, val height: Int, val left: Int = 0, val top: Int = 0)
+						class CutImageUseCase(private val readImagePort: ReadImagePort) {
+
+						fun apply(command: CutImageCommand): Array<Image> {
+							val sourceImage = readImagePort.read(command.file)
+
+							require(command.width > 0) { "Subimage width must be greater than 0" }
+							require(command.height > 0) { "Subimage height must be greater than 0" }
+							require(command.width + command.left <= sourceImage.width) { "Subimage width must be less than or equal to the image width" }
+							require(command.height + command.top  <= sourceImage.height) { "Subimage height must be less than or equal to the image height" }
+
+							val subImages = mutableListOf<Image>()
+							var x = command.left
+
+							while (x + command.width <= sourceImage.width) {
+							subImages.add(sourceImage.subImage(command.top, x, command.width, command.height))
+							x += command.width
+							}
+
+							return subImages.toTypedArray()
+						}
+						}
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg) First, let's create a simple ReadImagePort interface:
+
+						```kotlin[]
+						interface ReadImagePort {
+							fun read(file: File): Image
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Now we can write unit tests for the CutImageUseCase class using Kotest and the BehaviorSpec style:
+
+						```kotlin[]
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.collections.shouldHaveSize
+						import io.kotest.matchers.shouldBe
+						import java.io.File
+
+						class CutImageUseCaseTest : BehaviorSpec({
+							Given("A CutImageUseCase with a ReadImagePort implementation") {
+								val readImagePort = object : ReadImagePort {
+									override fun read(file: File): Image {
+										return Image(100, 50).apply {
+											for (y in 0 until height) {
+												for (x in 0 until width) {
+													this[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+												}
+											}
+										}
+									}
+								}
+								val cutImageUseCase = CutImageUseCase(readImagePort)
+
+								When("a CutImageCommand with valid parameters is provided") {
+									val command = CutImageCommand(File("dummy_file"), 20, 50)
+									val subImages = cutImageUseCase.apply(command)
+
+									Then("it should return an array of Image objects with the correct dimensions") {
+										subImages shouldHaveSize 4
+										subImages.forEach { subImage ->
+											subImage.width shouldBe 20
+											subImage.height shouldBe 50
+										}
+									}
+								}
+
+								When("a CutImageCommand with invalid parameters is provided") {
+									Then("it should throw an exception") {
+										val invalidCommand = CutImageCommand(File("dummy_file"), 0, 50)
+										shouldThrow<IllegalArgumentException> {
+											cutImageUseCase.apply(invalidCommand)
+										}
+									}
+								}
+							}
+						})
+
+						```
+
+						---
+
+						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
+						# Adapters
+
+						--
+
+						---
+
+						#### GPT-3.5, GPT-4 - useful use cases
+
+						* Replacement for Googling
+						* Replacement for StackOverflow
+						* Generate code from textual description
+						* Explain existing code
+						* Refactor existing code
+						* Write tests for existing code
+						* Migrate from one language to another
+						* Migrate tech stack
+						* ...
+
+						---
+
+						### Links
+
+						* https://huggingface.co/models
+						* https://huggingface.co/orel12/ggml-gpt4all-j-v1.3-groovy
+						* https://github.com/nomic-ai/gpt4all
 					</script>
 				</section>
 			</div>
