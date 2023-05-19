@@ -702,13 +702,879 @@
 						})
 
 						```
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) how about testing content of the subimages?
+
+						--
+
+						![GPT](img/gpt-ava.svg) To test the content of the subimages, you can add another Then block inside the When block for the valid parameters case. Here's the updated test class with the added test:
+
+						```kotlin[]
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.collections.shouldHaveSize
+						import io.kotest.matchers.shouldBe
+						import java.io.File
+
+						class CutImageUseCaseTest : BehaviorSpec({
+							Given("A CutImageUseCase with a ReadImagePort implementation") {
+								val readImagePort = object : ReadImagePort {
+									override fun read(file: File): Image {
+										return Image(100, 50).apply {
+											for (y in 0 until height) {
+												for (x in 0 until width) {
+													this[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+												}
+											}
+										}
+									}
+								}
+								val cutImageUseCase = CutImageUseCase(readImagePort)
+
+								When("a CutImageCommand with valid parameters is provided") {
+									val command = CutImageCommand(File("dummy_file"), 20, 50)
+									val subImages = cutImageUseCase.apply(command)
+
+									Then("it should return an array of Image objects with the correct dimensions") {
+										subImages shouldHaveSize 4
+										subImages.forEach { subImage ->
+											subImage.width shouldBe 20
+											subImage.height shouldBe 50
+										}
+									}
+
+									Then("the subimages should contain the correct region from the original image") {
+										val originalImage = readImagePort.read(File("dummy_file"))
+
+										subImages.forEachIndexed { index, subImage ->
+											for (y in 0 until subImage.height) {
+												for (x in 0 until subImage.width) {
+													subImage[x, y] shouldBe originalImage[x + 20 * index, y]
+												}
+											}
+										}
+									}
+								}
+
+								When("a CutImageCommand with invalid parameters is provided") {
+									Then("it should throw an exception") {
+										val invalidCommand = CutImageCommand(File("dummy_file"), 0, 50)
+										shouldThrow<IllegalArgumentException> {
+											cutImageUseCase.apply(invalidCommand)
+										}
+									}
+								}
+							}
+						})
+
+						```
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) Implement function that will cut image into subimages by given width and height assuming that original width is a multiply of width, the same for height. It should go from left to right and then top to bottom. Result should be an array of images.
+
+						--
+
+						![GPT](img/gpt-ava.svg) You can create a function called cutImageIntoSubimages that takes an input Image and the dimensions of the desired subimages. The function will then generate a series of subimages of the specified size, going from left to right and top to bottom. Here's the implementation of the function:
+
+						```kotlin[]
+						fun cutImageIntoSubimages(image: Image, subImageWidth: Int, subImageHeight: Int): Array<Image> {
+							require(subImageWidth > 0) { "Subimage width must be greater than 0" }
+							require(subImageHeight > 0) { "Subimage height must be greater than 0" }
+							require(image.width % subImageWidth == 0) { "Image width must be a multiple of subimage width" }
+							require(image.height % subImageHeight == 0) { "Image height must be a multiple of subimage height" }
+						
+							val numRows = image.height / subImageHeight
+							val numCols = image.width / subImageWidth
+							val subImages = mutableListOf<Image>()
+						
+							for (row in 0 until numRows) {
+								for (col in 0 until numCols) {
+									val left = col * subImageWidth
+									val top = row * subImageHeight
+									subImages.add(image.subImage(top, left, subImageWidth, subImageHeight))
+								}
+							}
+						
+							return subImages.toTypedArray()
+						}
+						```						
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) implement unit tests for this function in kotest
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here's a test class for the `cutImageIntoSubimages` function using Kotest and the `BehaviorSpec` style:
+
+						```kotlin
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.collections.shouldHaveSize
+						import io.kotest.matchers.shouldBe
+						
+						class CutImageIntoSubimagesTest : BehaviorSpec({
+							Given("An Image instance with dimensions 100x50") {
+								val image = Image(100, 50).apply {
+									for (y in 0 until height) {
+										for (x in 0 until width) {
+											this[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+										}
+									}
+								}
+						
+								When("cutting the image into subimages with dimensions 20x25") {
+									val subImages = cutImageIntoSubimages(image, 20, 25)
+						
+									Then("it should return an array of Image objects with the correct dimensions") {
+										subImages shouldHaveSize 10
+										subImages.forEach { subImage ->
+											subImage.width shouldBe 20
+											subImage.height shouldBe 25
+										}
+									}
+						
+									Then("the subimages should contain the correct region from the original image") {
+										for (i in subImages.indices) {
+											val subImage = subImages[i]
+											val offsetX = (i % 5) * 20
+											val offsetY = (i / 5) * 25
+						
+											for (y in 0 until subImage.height) {
+												for (x in 0 until subImage.width) {
+													subImage[x, y] shouldBe image[x + offsetX, y + offsetY]
+												}
+											}
+										}
+									}
+								}
+						
+								When("cutting the image into subimages with invalid dimensions") {
+									Then("it should throw an exception") {
+										shouldThrow<IllegalArgumentException> {
+											cutImageIntoSubimages(image, 0, 50)
+										}
+									}
+								}
+							}
+						})
+						```
+						
+						This test class includes test cases for the `cutImageIntoSubimages` function with valid and invalid subimage dimensions, as well as a test case for checking the content of the subimages to ensure they contain the correct region from the original image.
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) write unit tests in kotest for this class:
+
+						```kotlin
+						package com.github.c64lib.rbt.processors.image.usecase
+						
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						
+						data class CutImageCommand(val image: Image, val subImageWidth: Int, val subImageHeight: Int)
+						class CutImageUseCase {
+						  fun apply(command: CutImageCommand): Array<Image> {
+							require(command.subImageWidth > 0) { "Subimage width must be greater than 0" }
+							require(command.subImageHeight > 0) { "Subimage height must be greater than 0" }
+							require(command.image.width % command.subImageWidth == 0) { "Image width must be a multiple of subimage width" }
+							require(command.image.height % command.subImageHeight == 0) { "Image height must be a multiple of subimage height" }
+						
+							val numRows = command.image.height / command.subImageHeight
+							val numCols = command.image.width / command.subImageWidth
+							val subImages = mutableListOf<Image>()
+						
+							for (row in 0 until numRows) {
+							  for (col in 0 until numCols) {
+								val left = col * command.subImageWidth
+								val top = row * command.subImageHeight
+								subImages.add(command.image.subImage(top, left, command.subImageWidth, command.subImageHeight))
+							  }
+							}
+						
+							return subImages.toTypedArray()
+						  }
+						}
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here's a test class for the `CutImageUseCase` using Kotest and the `BehaviorSpec` style:
+
+						```kotlin
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.collections.shouldHaveSize
+						import io.kotest.matchers.shouldBe
+						
+						class CutImageUseCaseTest : BehaviorSpec({
+							Given("A CutImageUseCase instance") {
+								val cutImageUseCase = CutImageUseCase()
+						
+								And("An Image instance with dimensions 100x50") {
+									val image = Image(100, 50).apply {
+										for (y in 0 until height) {
+											for (x in 0 until width) {
+												this[x, y] = Color(x % 256, y % 256, (x + y) % 256, 255)
+											}
+										}
+									}
+						
+									When("a CutImageCommand with valid parameters is provided") {
+										val command = CutImageCommand(image, 20, 25)
+										val subImages = cutImageUseCase.apply(command)
+						
+										Then("it should return an array of Image objects with the correct dimensions") {
+											subImages shouldHaveSize 10
+											subImages.forEach { subImage ->
+												subImage.width shouldBe 20
+												subImage.height shouldBe 25
+											}
+										}
+						
+										Then("the subimages should contain the correct region from the original image") {
+											for (i in subImages.indices) {
+												val subImage = subImages[i]
+												val offsetX = (i % 5) * 20
+												val offsetY = (i / 5) * 25
+						
+												for (y in 0 until subImage.height) {
+													for (x in 0 until subImage.width) {
+														subImage[x, y] shouldBe image[x + offsetX, y + offsetY]
+													}
+												}
+											}
+										}
+									}
+						
+									When("a CutImageCommand with invalid parameters is provided") {
+										Then("it should throw an exception") {
+											val invalidCommand = CutImageCommand(image, 0, 50)
+											shouldThrow<IllegalArgumentException> {
+												cutImageUseCase.apply(invalidCommand)
+											}
+										}
+									}
+								}
+							}
+						})
+						```
+						
+						This test class includes test cases for the `CutImageUseCase` with valid and invalid `CutImageCommand` parameters, as well as a test case for checking the content of the subimages to ensure they contain the correct region from the original image.
 
 						---
 
 						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
-						# Adapters
+						# Adapters (1)
 
 						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) Given the following interface: 
+						
+						```kotlin
+						interface ReadImagePort {
+							fun read(file: File): Image
+						  }
+						```
+						  
+						implement in Kotlin an adapter (implementation) that parses PNG file into the Image structure.
+						  
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+						![Hum](img/hum-ava.png) Image is declared as follows:
+						
+						```kotlin[]
+						  data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+						  
+						  class Image(val width: Int, val height: Int) {
+						  
+							private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+						  
+							operator fun get(x: Int, y: Int): Color {
+							  require(x in 0 until width) { "x coordinate out of bounds" }
+							  require(y in 0 until height) { "y coordinate out of bounds" }
+							  return pixels[y][x]
+							}
+						  
+							operator fun set(x: Int, y: Int, color: Color) {
+							  require(x in 0 until width) { "x coordinate out of bounds" }
+							  require(y in 0 until height) { "y coordinate out of bounds" }
+							  pixels[y][x] = color
+							}
+						  
+							fun subImage(top: Int, left: Int, width: Int, height: Int): Image {
+							  require(top in 0 until this.height) { "Top coordinate out of bounds" }
+							  require(left in 0 until this.width) { "Left coordinate out of bounds" }
+							  require(top + height <= this.height) { "Height out of bounds" }
+							  require(left + width <= this.width) { "Width out of bounds" }
+						  
+							  val newImage = Image(width, height)
+							  for (y in 0 until height) {
+								for (x in 0 until width) {
+								  newImage[x, y] = this[left + x, top + y]
+								}
+							  }
+							  return newImage
+							}
+						  
+							fun extend(newWidth: Int, newHeight: Int, fillColor: Color = Color(0, 0, 0, 255)): Image {
+							  require(newWidth >= width) { "New width must be greater or equal to the current width" }
+							  require(newHeight >= height) { "New height must be greater or equal to the current height" }
+						  
+							  val newImage = Image(newWidth, newHeight)
+						  
+							  // Copy original image pixels
+							  for (y in 0 until height) {
+								for (x in 0 until width) {
+								  newImage[x, y] = this[x, y]
+								}
+							  }
+						  
+							  // Fill the extended area with the specified color
+							  for (y in 0 until newHeight) {
+								for (x in 0 until newWidth) {
+								  if (x >= width || y >= height) {
+									newImage[x, y] = fillColor
+								  }
+								}
+							  }
+						  
+							  return newImage
+							}
+						  }
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg) To implement an adapter that parses PNG files into the Image structure, you can use a library like `java.awt.image.BufferedImage` to read the PNG file and then create an Image from it. Here's the implementation:
+
+						1. First, add the required dependencies to your `build.gradle.kts` or `build.gradle` file:
+						
+						```kotlin
+						dependencies {
+							implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+							implementation("org.jetbrains.kotlinx:kotlinx-io-jvm:0.1.16")
+						}
+						```
+						--
+						![GPT](img/gpt-ava.svg) 
+						2. Create the `PngImageReader` class that implements `ReadImagePort`:
+						
+						```kotlin
+						import java.awt.image.BufferedImage
+						import java.io.File
+						import javax.imageio.ImageIO
+						
+						class PngImageReader : ReadImagePort {
+							override fun read(file: File): Image {
+								val bufferedImage: BufferedImage = ImageIO.read(file)
+								val width = bufferedImage.width
+								val height = bufferedImage.height
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										val argb = bufferedImage.getRGB(x, y)
+										val alpha = (argb shr 24) and 0xff
+										val red = (argb shr 16) and 0xff
+										val green = (argb shr 8) and 0xff
+										val blue = argb and 0xff
+										val color = Color(red, green, blue, alpha)
+										image[x, y] = color
+									}
+								}
+						
+								return image
+							}
+						}
+						```
+						
+						--
+						![GPT](img/gpt-ava.svg) This class uses the `javax.imageio.ImageIO` class to read the PNG file into a `BufferedImage` object. It then iterates over the pixels, extracts the color components, creates a `Color` object, and sets the corresponding pixel in the `Image` object.
+						
+						Now you can use the `PngImageReader` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = PngImageReader()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) will that run on headless system like linux server without XServer installed?
+
+						--
+
+						![GPT](img/gpt-ava.svg) My apologies, I didn't take into account the potential headless environment. In that case, you can use the `TwelveMonkeys` library for parsing PNG images, which does not require an XServer. Here's how to modify the implementation:
+
+						1. Add the required dependencies to your `build.gradle.kts` or `build.gradle` file:
+						
+						```kotlin
+						dependencies {
+							implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+							implementation("org.jetbrains.kotlinx:kotlinx-io-jvm:0.1.16")
+							implementation("com.twelvemonkeys.imageio:imageio-core:3.7.0")
+							implementation("com.twelvemonkeys.imageio:imageio-png:3.7.0")
+						}
+						```
+
+						--
+
+						![GPT](img/gpt-ava.svg)
+						
+						2. Modify the `PngImageReader` class to use the `TwelveMonkeys` library:
+						
+						```kotlin
+						import com.twelvemonkeys.imageio.plugins.png.PNGImageReader
+						import com.twelvemonkeys.imageio.plugins.png.PNGImageReaderSpi
+						import java.awt.image.BufferedImage
+						import java.io.File
+						import java.io.FileInputStream
+						import javax.imageio.stream.FileImageInputStream
+						
+						class PngImageReader : ReadImagePort {
+							override fun read(file: File): Image {
+								val inputStream = FileInputStream(file)
+								val imageInputStream = FileImageInputStream(inputStream)
+						
+								val imageReader = PNGImageReader(PNGImageReaderSpi())
+								imageReader.setInput(imageInputStream)
+								val bufferedImage: BufferedImage = imageReader.read(0)
+						
+								val width = bufferedImage.width
+								val height = bufferedImage.height
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									for (x in 0 until width) {
+										val argb = bufferedImage.getRGB(x, y)
+										val alpha = (argb shr 24) and 0xff
+										val red = (argb shr 16) and 0xff
+										val green = (argb shr 8) and 0xff
+										val blue = argb and 0xff
+										val color = Color(red, green, blue, alpha)
+										image[x, y] = color
+									}
+								}
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg)	This implementation uses the `TwelveMonkeys` library to read the PNG file and should work without issues in a headless environment. The rest of the implementation remains the same.
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) How about pngj library from leonbloy?
+
+						--
+
+						![GPT](img/gpt-ava.svg) Certainly! The `pngj` library by leonbloy is a great option for parsing PNG files in a headless environment. Here's how to modify the implementation using the `pngj` library:
+
+						1. Add the required dependency to your `build.gradle.kts` or `build.gradle` file:
+						
+						```kotlin
+						dependencies {
+							implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+							implementation("ar.com.hjg:pngj:2.1.0")
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 2. Modify the `PngImageReader` class to use the `pngj` library:
+						
+						```kotlin
+						import ar.com.hjg.pngj.ImageInfo
+						import ar.com.hjg.pngj.PngReader
+						import java.io.File
+						
+						class PngImageReader : ReadImagePort {
+							override fun read(file: File): Image {
+								val pngReader = PngReader(file)
+								val imageInfo: ImageInfo = pngReader.imgInfo
+								val width = imageInfo.cols
+								val height = imageInfo.rows
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									val row = pngReader.readRow(y)
+									for (x in 0 until width) {
+										val r = row.getR(x)
+										val g = row.getG(x)
+										val b = row.getB(x)
+										val a = if (imageInfo.channels == 4) row.getA(x) else 255
+										val color = Color(r, g, b, a)
+										image[x, y] = color
+									}
+								}
+								pngReader.end()
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) This implementation uses the `pngj` library to read the PNG file and should work without issues in a headless environment. The rest of the implementation remains the same.
+						
+						Now you can use the `PngImageReader` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = PngImageReader()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) rename class to ReadPngImagePort
+
+						--
+
+						![GPT](img/gpt-ava.svg) Sure, I'll rename the class to `ReadPngImagePort`. Here's the updated implementation using the `pngj` library:
+
+						```kotlin
+						import ar.com.hjg.pngj.ImageInfo
+						import ar.com.hjg.pngj.PngReader
+						import java.io.File
+						
+						class ReadPngImagePort : ReadImagePort {
+							override fun read(file: File): Image {
+								val pngReader = PngReader(file)
+								val imageInfo: ImageInfo = pngReader.imgInfo
+								val width = imageInfo.cols
+								val height = imageInfo.rows
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									val row = pngReader.readRow(y)
+									for (x in 0 until width) {
+										val r = row.getR(x)
+										val g = row.getG(x)
+										val b = row.getB(x)
+										val a = if (imageInfo.channels == 4) row.getA(x) else 255
+										val color = Color(r, g, b, a)
+										image[x, y] = color
+									}
+								}
+								pngReader.end()
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Now you can use the `ReadPngImagePort` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = ReadPngImagePort()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+
+						--
+
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) the row does not have getR and so on methods
+
+						--
+
+						![GPT](img/gpt-ava.svg) Apologies for the oversight. You're correct that the `ImageLine` class, which represents a row in the `pngj` library, does not have `getR`, `getG`, `getB`, and `getA` methods. Instead, you can use the `getElem` method to access the pixel values. Here's the corrected implementation of the `ReadPngImagePort` class:
+
+						```kotlin
+						import ar.com.hjg.pngj.ImageInfo
+						import ar.com.hjg.pngj.PngReader
+						import java.io.File
+						
+						class ReadPngImagePort : ReadImagePort {
+							override fun read(file: File): Image {
+								val pngReader = PngReader(file)
+								val imageInfo: ImageInfo = pngReader.imgInfo
+								val width = imageInfo.cols
+								val height = imageInfo.rows
+								val channels = imageInfo.channels
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									val row = pngReader.readRow(y)
+									for (x in 0 until width) {
+										val baseIndex = x * channels
+										val r = row.getElem(baseIndex)
+										val g = row.getElem(baseIndex + 1)
+										val b = row.getElem(baseIndex + 2)
+										val a = if (channels == 4) row.getElem(baseIndex + 3) else 255
+										val color = Color(r, g, b, a)
+										image[x, y] = color
+									}
+								}
+								pngReader.end()
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Now you can use the `ReadPngImagePort` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = ReadPngImagePort()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) no it does not work neither. Doc says that IImageLine should be casted to more concrete classes					
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Apologies for the confusion. You're right, the `IImageLine` returned by `readRow` should be cast to a more concrete class, such as `ImageLineInt` or `ImageLineByte`, depending on the `imgInfo.bitDepth` value. Here's the corrected implementation:
+
+						```kotlin
+						import ar.com.hjg.pngj.ImageInfo
+						import ar.com.hjg.pngj.ImageLineByte
+						import ar.com.hjg.pngj.ImageLineHelper
+						import ar.com.hjg.pngj.ImageLineInt
+						import ar.com.hjg.pngj.PngReader
+						import java.io.File
+						
+						class ReadPngImagePort : ReadImagePort {
+							override fun read(file: File): Image {
+								val pngReader = PngReader(file)
+								val imageInfo: ImageInfo = pngReader.imgInfo
+								val width = imageInfo.cols
+								val height = imageInfo.rows
+								val channels = imageInfo.channels
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									val row = pngReader.readRow(y)
+									for (x in 0 until width) {
+										val color = when (row) {
+											is ImageLineInt -> {
+												val scanline = row.scanline
+												val r = ImageLineHelper.getRgba8(scanline, x)
+												val g = ImageLineHelper.getRgag8(scanline, x)
+												val b = ImageLineHelper.getRgab8(scanline, x)
+												val a = if (channels == 4) ImageLineHelper.getRgbaA8(scanline, x) else 255
+												Color(r, g, b, a)
+											}
+											is ImageLineByte -> {
+												val scanline = row.scanline
+												val r = ImageLineHelper.getRgba8(scanline, x)
+												val g = ImageLineHelper.getRgag8(scanline, x)
+												val b = ImageLineHelper.getRgab8(scanline, x)
+												val a = if (channels == 4) ImageLineHelper.getRgbaA8(scanline, x) else 255
+												Color(r, g, b, a)
+											}
+											else -> throw IllegalStateException("Unsupported row type: ${row.javaClass}")
+										}
+										image[x, y] = color
+									}
+								}
+								pngReader.end()
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) This implementation uses the `ImageLineInt` and `ImageLineByte` classes to handle different types of image rows and utilizes the `ImageLineHelper` class to access pixel values. The rest of the implementation remains the same.
+						
+						Now you can use the `ReadPngImagePort` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = ReadPngImagePort()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) ImageLineHelper.getRgba8 does not exist					
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Apologies once again for the confusion. You are correct that the `ImageLineHelper` methods I previously mentioned do not exist. Instead, you can use the `getPixel` method in combination with `getElem` to access pixel values. Here's the corrected implementation:
+
+						```kotlin
+						import ar.com.hjg.pngj.ImageInfo
+						import ar.com.hjg.pngj.ImageLineByte
+						import ar.com.hjg.pngj.ImageLineInt
+						import ar.com.hjg.pngj.PngReader
+						import java.io.File
+						
+						class ReadPngImagePort : ReadImagePort {
+							override fun read(file: File): Image {
+								val pngReader = PngReader(file)
+								val imageInfo: ImageInfo = pngReader.imgInfo
+								val width = imageInfo.cols
+								val height = imageInfo.rows
+								val channels = imageInfo.channels
+								val image = Image(width, height)
+						
+								for (y in 0 until height) {
+									val row = pngReader.readRow(y)
+									for (x in 0 until width) {
+										val color = when (row) {
+											is ImageLineInt -> {
+												val scanline = row.scanline
+												val pixel = row.getPixel(x)
+												val r = pixel[0]
+												val g = pixel[1]
+												val b = pixel[2]
+												val a = if (channels == 4) pixel[3] else 255
+												Color(r, g, b, a)
+											}
+											is ImageLineByte -> {
+												val scanline = row.scanline
+												val pixel = row.getPixel(x)
+												val r = pixel[0].toInt() and 0xFF
+												val g = pixel[1].toInt() and 0xFF
+												val b = pixel[2].toInt() and 0xFF
+												val a = if (channels == 4) pixel[3].toInt() and 0xFF else 255
+												Color(r, g, b, a)
+											}
+											else -> throw IllegalStateException("Unsupported row type: ${row.javaClass}")
+										}
+										image[x, y] = color
+									}
+								}
+								pngReader.end()
+						
+								return image
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) This implementation uses the `ImageLineInt` and `ImageLineByte` classes to handle different types of image rows and utilizes the `getPixel` method in combination with `getElem` to access pixel values. The rest of the implementation remains the same.
+						
+						Now you can use the `ReadPngImagePort` class to read PNG files into the `Image` structure:
+						
+						```kotlin
+						fun main() {
+							val file = File("path/to/your/png/file.png")
+							val imageReader: ReadImagePort = ReadPngImagePort()
+							val image = imageReader.read(file)
+						
+							// Use the Image object as needed
+							println("Image width: ${image.width}, height: ${image.height}")
+						}
+						```
+
+						---
+
+						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
+						# Adapters (2)
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) [at this moment I gave up and fixed that code manually]				
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 
 
 						---
 
