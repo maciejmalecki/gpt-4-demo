@@ -1517,65 +1517,472 @@
 						}
 						```
 
-						---
-
-						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
-						# Adapters (2)
-
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
 						![Hum](img/hum-ava.png) [at this moment I gave up and fixed that code manually]				
+
+						---
+
+						<!-- .slide: data-background-image="img/ChatGPT_logo.svg" data-background-opacity="0.3"-->
+						# Adapters (2)
+			
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) Assuming following code: 
+
+						```kotlin
+						package com.github.c64lib.rbt.processors.image.domain
+						
+						data class Color(val red: Int, val green: Int, val blue: Int, val alpha: Int)
+						
+						class Image(val width: Int, val height: Int) {
+						
+						  private val pixels = Array(height) { Array(width) { Color(0, 0, 0, 255) } }
+						
+						  operator fun get(x: Int, y: Int): Color {
+							require(x in 0 until width) { "x coordinate out of bounds" }
+							require(y in 0 until height) { "y coordinate out of bounds" }
+							return pixels[y][x]
+						  }
+						
+						  operator fun set(x: Int, y: Int, color: Color) {
+							require(x in 0 until width) { "x coordinate out of bounds" }
+							require(y in 0 until height) { "y coordinate out of bounds" }
+							pixels[y][x] = color
+						  }
+						
+						  fun subImage(top: Int, left: Int, width: Int, height: Int): Image {
+							require(top in 0 until this.height) { "Top coordinate out of bounds" }
+							require(left in 0 until this.width) { "Left coordinate out of bounds" }
+							require(top + height <= this.height) { "Height out of bounds" }
+							require(left + width <= this.width) { "Width out of bounds" }
+						
+							val newImage = Image(width, height)
+							for (y in 0 until height) {
+							  for (x in 0 until width) {
+								newImage[x, y] = this[left + x, top + y]
+							  }
+							}
+							return newImage
+						  }
+						
+						  fun extend(newWidth: Int, newHeight: Int, fillColor: Color = Color(0, 0, 0, 255)): Image {
+							require(newWidth >= width) { "New width must be greater or equal to the current width" }
+							require(newHeight >= height) { "New height must be greater or equal to the current height" }
+						
+							val newImage = Image(newWidth, newHeight)
+						
+							// Copy original image pixels
+							for (y in 0 until height) {
+							  for (x in 0 until width) {
+								newImage[x, y] = this[x, y]
+							  }
+							}
+						
+							// Fill the extended area with the specified color
+							for (y in 0 until newHeight) {
+							  for (x in 0 until newWidth) {
+								if (x >= width || y >= height) {
+								  newImage[x, y] = fillColor
+								}
+							  }
+							}
+						
+							return newImage
+						  }
+						
+						  fun dump() {
+							for (y in 0 until height) {
+							  for (x in 0 until width) {
+								print(
+									if (pixels[y][x] == Color(0, 0, 0, 255)) {
+									  "."
+									} else {
+									  "#"
+									},
+								)
+							  }
+							  println()
+							}
+						  }
+						}
+						```
+												
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) 	implement the following port:
+						
+						```kotlin
+						interface WriteSpritePort {
+						  fun write(image: Image, toFile: File)
+						}
+						```
+						
+						that will write an image to the binary file containing Commodore 64 sprite shape definition. Assume this is an hires sprite, Color(0,0,0,255) is for transparent pixel and any other for set pixel					
 						
 						--
 
-						![GPT](img/gpt-ava.svg) 
+						![GPT](img/gpt-ava.svg) To implement the `WriteSpritePort` interface, you need to create a class that writes an image to a binary file containing the Commodore 64 sprite shape definition. In this case, the sprite is a hires sprite, where Color(0, 0, 0, 255) represents a transparent pixel, and any other color represents a set pixel.
+
+						--
+
+						![GPT](img/gpt-ava.svg) Here is a possible implementation of the `WriteSpritePort` interface:
+						
+						```kotlin
+						import com.github.c64lib.rbt.processors.image.domain.Color
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						import java.io.File
+						import java.io.FileOutputStream
+						
+						class C64SpriteWriter : WriteSpritePort {
+							override fun write(image: Image, toFile: File) {
+								require(image.width == 24) { "Sprite width must be 24 pixels for Commodore 64 hires sprites" }
+								require(image.height == 21) { "Sprite height must be 21 pixels for Commodore 64 hires sprites" }
+						
+								val spriteData = ByteArray(63)
+						
+								for (y in 0 until 21) {
+									for (x in 0 until 24 step 8) {
+										val byte = ((if (image[x, y] != Color(0, 0, 0, 255)) 1 else 0) shl 7) or
+												   ((if (image[x + 1, y] != Color(0, 0, 0, 255)) 1 else 0) shl 6) or
+												   ((if (image[x + 2, y] != Color(0, 0, 0, 255)) 1 else 0) shl 5) or
+												   ((if (image[x + 3, y] != Color(0, 0, 0, 255)) 1 else 0) shl 4) or
+												   ((if (image[x + 4, y] != Color(0, 0, 0, 255)) 1 else 0) shl 3) or
+												   ((if (image[x + 5, y] != Color(0, 0, 0, 255)) 1 else 0) shl 2) or
+												   ((if (image[x + 6, y] != Color(0, 0, 0, 255)) 1 else 0) shl 1) or
+												   (if (image[x + 7, y] != Color(0, 0, 0, 255)) 1 else 0)
+						
+										spriteData[y * 3 + x / 8] = byte.toByte()
+									}
+								}
+						
+								FileOutputStream(toFile).use { it.write(spriteData) }
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) In this implementation, the `C64SpriteWriter` class writes the image data to a file in the format of a Commodore 64 hires sprite. It converts the image pixels into a byte array, where each byte represents 8 pixels in a row, and the bits in the byte represent the state of the pixels (transparent or set). The byte array is then written to the specified file using
 
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						![Hum](img/hum-ava.png) 						
+						![Hum](img/hum-ava.png) improve the code so that 1) color checking is extracted to a separate private method 2) resulting size is always 64 bytes so that add a zero byte at the end.				
 						
 						--
 
-						![GPT](img/gpt-ava.svg) 
+						![GPT](img/gpt-ava.svg) To improve the code as per your request, you can create a separate private method for color checking, and ensure that the resulting size is always 64 bytes by adding a zero byte at the end. Here's the modified implementation:
+					
+						```kotlin
+						import com.github.c64lib.rbt.processors.image.domain.Color
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						import java.io.File
+						import java.io.FileOutputStream
+						
+						class C64SpriteWriter : WriteSpritePort {
+							override fun write(image: Image, toFile: File) {
+								require(image.width == 24) { "Sprite width must be 24 pixels for Commodore 64 hires sprites" }
+								require(image.height == 21) { "Sprite height must be 21 pixels for Commodore 64 hires sprites" }
+						
+								val spriteData = ByteArray(64)
+						
+								for (y in 0 until 21) {
+									for (x in 0 until 24 step 8) {
+										val byte = (pixelValue(image[x, y]) shl 7) or
+												   (pixelValue(image[x + 1, y]) shl 6) or
+												   (pixelValue(image[x + 2, y]) shl 5) or
+												   (pixelValue(image[x + 3, y]) shl 4) or
+												   (pixelValue(image[x + 4, y]) shl 3) or
+												   (pixelValue(image[x + 5, y]) shl 2) or
+												   (pixelValue(image[x + 6, y]) shl 1) or
+												   pixelValue(image[x + 7, y])
+						
+										spriteData[y * 3 + x / 8] = byte.toByte()
+									}
+								}
+						
+								FileOutputStream(toFile).use { it.write(spriteData) }
+							}
+						
+							private fun pixelValue(color: Color): Int {
+								return if (color != Color(0, 0, 0, 255)) 1 else 0
+							}
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) In this implementation, the `pixelValue` private method checks if a pixel color is transparent or set, and returns the corresponding value (0 or 1). This method is used when constructing the byte value for each group of 8 pixels. The size of the `spriteData` byte array has been increased to 64 bytes, with the last byte remaining as 0 (default value).
 
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						![Hum](img/hum-ava.png) 						
+						![Hum](img/hum-ava.png) implement unit tests for this class using Kotest and behavior spec						
 						
 						--
 
-						![GPT](img/gpt-ava.svg) 
+						![GPT](img/gpt-ava.svg) To implement unit tests for the `C64SpriteWriter` class using Kotest and behavior spec, you'll need to add the Kotest dependencies to your project, create a test class, and define tests using the behavior spec style. Here's an example:
+
+						1. Add the Kotest dependencies to your `build.gradle.kts` file:
+						
+						```kotlin
+						dependencies {
+							// ...
+							testImplementation("io.kotest:kotest-framework-api:4.6.3")
+							testImplementation("io.kotest:kotest-assertions-core:4.6.3")
+							testImplementation("io.kotest:kotest-runner-junit5:4.6.3")
+						}
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) 2. Create a test class for the `C64SpriteWriter` and define tests using behavior spec:
+						
+						```kotlin
+						import com.github.c64lib.rbt.processors.image.domain.Color
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.shouldBe
+						import java.io.File
+						import java.nio.file.Files
+						
+						class C64SpriteWriterTest : BehaviorSpec({
+						
+							fun createTestImage(): Image {
+								val image = Image(24, 21)
+						
+								// Draw some example pixels
+								image[0, 0] = Color(255, 255, 255, 255)
+								image[7, 0] = Color(255, 255, 255, 255)
+								image[15, 20] = Color(255, 255, 255, 255)
+						
+								return image
+							}
+						
+							fun readSpriteData(file: File): ByteArray {
+								return Files.readAllBytes(file.toPath())
+							}
+						
+							given("a C64SpriteWriter instance") {
+								val writer = C64SpriteWriter()
+						
+								`when`("writing a valid image to a file") {
+									val image = createTestImage()
+									val outputFile = File.createTempFile("sprite_", ".bin")
+									outputFile.deleteOnExit()
+						
+									writer.write(image, outputFile)
+						
+									then("the resulting file should have the correct size and data") {
+										val spriteData = readSpriteData(outputFile)
+						
+										spriteData.size shouldBe 64
+										spriteData[0] shouldBe 0b10000001.toByte()
+										spriteData[62] shouldBe 0b00100000.toByte()
+										spriteData[63] shouldBe 0
+									}
+								}
+							}
+						})
+						```
+						
+						--
+
+						![GPT](img/gpt-ava.svg) In this example, the `C64SpriteWriterTest` class defines a behavior spec with a `given` block for the `C64SpriteWriter` instance. The `createTestImage()` function creates a test image, and the `readSpriteData()` function reads the sprite data from a file.
+						
+						The test scenario writes a valid image to a file using the `C64SpriteWriter` and checks whether the resulting file has the correct size (64 bytes) and data. The `outputFile` is a temporary file that is automatically deleted when the JVM exits.
 
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						![Hum](img/hum-ava.png) 						
+						![Hum](img/hum-ava.png) this fails spriteData[62] shouldBe 0b00100000.toByte(), gets 0 instead of 32					
 						
 						--
 
-						![GPT](img/gpt-ava.svg) 
+						![GPT](img/gpt-ava.svg) Apologies for the oversight. Let's adjust the test setup to ensure the correct result is being tested. Update the `createTestImage()` function to set a pixel in the last byte of the sprite data:
+
+						```kotlin
+						fun createTestImage(): Image {
+							val image = Image(24, 21)
+						
+							// Draw some example pixels
+							image[0, 0] = Color(255, 255, 255, 255)
+							image[7, 0] = Color(255, 255, 255, 255)
+							image[7, 20] = Color(255, 255, 255, 255) // Set a pixel in the last byte of the sprite data
+						
+							return image
+						}
+						```
+						
+						Now, the test should pass as expected:
+						
+						```kotlin
+						spriteData[62] shouldBe 0b00100000.toByte() // 32
+						```
 
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						![Hum](img/hum-ava.png) 						
-						
-						--
-
-						![GPT](img/gpt-ava.svg) 
+						![Hum](img/hum-ava.png) [it didn't, this is the second time I had to react manually; indexing was messed up, likely because I originally didn't mention I want 64 bytes instead of 63]
 
 						--
 						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
 
-						![Hum](img/hum-ava.png) 						
+						![Hum](img/hum-ava.png) Implement another adapter, for this port:
+
+						```kotlin
+						interface WriteCharsetPort {
+						  fun write(image: Image, toFile: File)
+						}
+						```
+						
+						that will write image data into a binary file encoded as bitmap mode of commodore 64 is encoded, that a 8 consenutive bytes define a 8x8 pixel block. Assume hires mode and restrict sensible dimensions of the source image						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) To implement the `WriteCharsetPort` interface, you need to create a class that writes the image data to a binary file encoded in the Commodore 64 bitmap mode. In this case, the bitmap mode is hires, and the image dimensions must be restricted to sensible values. 
+						
+						--
+
+						![GPT](img/gpt-ava.svg) Here's a possible implementation:
+
+						```kotlin
+						import com.github.c64lib.rbt.processors.image.domain.Color
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						import java.io.File
+						import java.io.FileOutputStream
+						
+						class C64CharsetWriter : WriteCharsetPort {
+							override fun write(image: Image, toFile: File) {
+								require(image.width % 8 == 0) { "Image width must be a multiple of 8 for Commodore 64 hires charset" }
+								require(image.height % 8 == 0) { "Image height must be a multiple of 8 for Commodore 64 hires charset" }
+						
+								val numBlocksX = image.width / 8
+								val numBlocksY = image.height / 8
+								val dataSize = numBlocksX * numBlocksY * 8
+								val charsetData = ByteArray(dataSize)
+						
+								for (blockY in 0 until numBlocksY) {
+									for (blockX in 0 until numBlocksX) {
+										for (y in 0 until 8) {
+											val yOffset = (blockY * 8 + y) * numBlocksX * 8
+											val xOffset = blockX * 8
+						
+											val byte = (pixelValue(image[xOffset, yOffset + y]) shl 7) or
+													   (pixelValue(image[xOffset + 1, yOffset + y]) shl 6) or
+													   (pixelValue(image[xOffset + 2, yOffset + y]) shl 5) or
+													   (pixelValue(image[xOffset + 3, yOffset + y]) shl 4) or
+													   (pixelValue(image[xOffset + 4, yOffset + y]) shl 3) or
+													   (pixelValue(image[xOffset + 5, yOffset + y]) shl 2) or
+													   (pixelValue(image[xOffset + 6, yOffset + y]) shl 1) or
+													   pixelValue(image[xOffset + 7, yOffset + y])
+						
+											charsetData[blockY * numBlocksX * 8 + blockX * 8 + y] = byte.toByte()
+										}
+									}
+								}
+						
+								FileOutputStream(toFile).use { it.write(charsetData) }
+							}
+						
+							private fun pixelValue(color: Color): Int {
+								return if (color != Color(0, 0, 0, 255)) 1 else 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) finish please						
 						
 						--
 
 						![GPT](img/gpt-ava.svg) 
+						```kotlin
+								0
+							}
+						}
+						```
+				
+						--
 
+						![GPT](img/gpt-ava.svg) Here's the completed `C64CharsetWriter` class. The `write` method takes an `Image` and a `File` as input and writes the image data to the file in the Commodore 64 hires charset format. The method first checks if the image dimensions are valid, calculates the number of blocks in the x and y dimensions, and initializes the `charsetData` byte array. It then iterates through the image blocks and creates the charset data by converting the pixel values from the input image to the corresponding hires charset format. Finally, the method writes the resulting charset data to the specified file.
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) implement unit test in kotest using behavior spec						
+						
+						--
+
+						![GPT](img/gpt-ava.svg) To implement a unit test for the `C64CharsetWriter` class using Kotest and behavior spec, create a test class and define tests using the behavior spec style. Here's an example:
+
+						```kotlin
+						import com.github.c64lib.rbt.processors.image.domain.Color
+						import com.github.c64lib.rbt.processors.image.domain.Image
+						import io.kotest.core.spec.style.BehaviorSpec
+						import io.kotest.matchers.shouldBe
+						import java.io.File
+						import java.nio.file.Files
+						
+						class C64CharsetWriterTest : BehaviorSpec({
+						
+							fun createTestImage(): Image {
+								val image = Image(16, 8)
+						
+								// Draw some example pixels
+								image[0, 0] = Color(255, 255, 255, 255)
+								image[7, 0] = Color(255, 255, 255, 255)
+								image[15, 7] = Color(255, 255, 255, 255)
+						
+								return image
+							}
+						
+							fun readCharsetData(file: File): ByteArray {
+								return Files.readAllBytes(file.toPath())
+							}
+						
+							given("a C64CharsetWriter instance") {
+								val writer = C64CharsetWriter()
+						
+								`when`("writing a valid image to a file") {
+									val image = createTestImage()
+									val outputFile = File.createTempFile("charset_", ".bin")
+									outputFile.deleteOnExit()
+						
+									writer.write(image, outputFile)
+						
+									then("the resulting file should have the correct size and data") {
+										val charsetData = readCharsetData(outputFile)
+						
+										charsetData.size shouldBe 16
+										charsetData[0] shouldBe 
+
+						--
+						<!-- .slide: data-background-gradient="radial-gradient(#283b95, #17b2c3)"-->
+
+						![Hum](img/hum-ava.png) continue						
+						
+						--
+						
+						![GPT](img/gpt-ava.svg) 
+						```kotlin
+										0b10000001.toByte()
+										charsetData[7] shouldBe 0b01000000.toByte()
+										charsetData[15] shouldBe 0b00000001.toByte()
+									}
+								}
+							}
+						})
+						```
+		
+						--
+						
+						![GPT](img/gpt-ava.svg) In this example, the `C64CharsetWriterTest` class defines a behavior spec with a `given` block for the `C64CharsetWriter` instance. The `createTestImage()` function creates a test image, and the `readCharsetData()` function reads the charset data from a file.
+		
+						The test scenario writes a valid image to a file using the `C64CharsetWriter` and checks whether the resulting file has the correct size (16 bytes) and data. The `outputFile` is a temporary file that is automatically deleted when the JVM exits.
 						---
 
 						#### GPT-3.5, GPT-4 - useful use cases
@@ -1612,6 +2019,7 @@
 			// - https://revealjs.com/initialization/
 			// - https://revealjs.com/config/
 			Reveal.initialize({
+				width: 1200,
 				hash: true,
 				slideNumber: 'c/t',
 				mathjax2: {
